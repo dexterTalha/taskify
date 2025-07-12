@@ -165,7 +165,7 @@ taskify/
 ## 📸 Screenshots
 
 | Home Screen | Add Task | Task Details |
-|-------------|----------|--------------|--------------|
+|-------------|----------|--------------|
 | ![Home](screenshots/home.png) | ![Add](screenshots/add.png) | ![Details](screenshots/details.png) |
 
 ## 🎯 Key Highlights

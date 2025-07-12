@@ -218,22 +218,17 @@ taskify/
 - [ ] Dark mode toggle
 - [ ] Multi-language support
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🤝 Support
 
 If you encounter any issues or have questions, please:
-1. Check the [Issues](https://github.com/your-username/taskify/issues) section
+1. Check the [Issues](https://github.com/dextertalha/taskify/issues) section
 2. Create a new issue if needed
 3. Provide detailed information about the problem
 
 ## 📧 Contact
 
-- **Developer**: Your Name
-- **Email**: your.email@example.com
-- **GitHub**: [@your-username](https://github.com/your-username)
+- **Developer**: Mohd Talha
+- **GitHub**: [@dextertalha](https://github.com/dextertalha)
 
 ---
 

@@ -17,14 +17,12 @@ class TaskListScreen extends StatefulWidget {
   State<TaskListScreen> createState() => _TaskListScreenState();
 }
 
-class _TaskListScreenState extends State<TaskListScreen>
-    with TickerProviderStateMixin {
+class _TaskListScreenState extends State<TaskListScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
   final TextEditingController _searchController = TextEditingController();
-  bool _isSearching = false;
 
   @override
   void initState() {
@@ -34,22 +32,11 @@ class _TaskListScreenState extends State<TaskListScreen>
   }
 
   void _setupAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
+    _animationController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
 
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
 
     _animationController.forward();
   }
@@ -80,27 +67,31 @@ class _TaskListScreenState extends State<TaskListScreen>
 
   AppBar _buildAppBar() {
     return AppBar(
-      title: _isSearching ? _buildSearchField() : const Text('Taskify'),
+      title: Consumer<TaskProvider>(
+        builder: (context, taskProvider, child) {
+          return taskProvider.isSearching ? _buildSearchField() : const Text('Taskify');
+        },
+      ),
       actions: [
-        IconButton(
-          icon: Icon(_isSearching ? Icons.close : Icons.search),
-          onPressed: () {
-            setState(() {
-              _isSearching = !_isSearching;
-              if (!_isSearching) {
-                _searchController.clear();
-                context.read<TaskProvider>().clearSearch();
-              }
-            });
+        Consumer<TaskProvider>(
+          builder: (context, taskProvider, child) {
+            return IconButton(
+              icon: Icon(taskProvider.isSearching ? Icons.close : Icons.search),
+              onPressed: () {
+                if (taskProvider.isSearching) {
+                  _searchController.clear();
+                  taskProvider.clearSearch();
+                } else {
+                  taskProvider.setSearching(true);
+                }
+              },
+            );
           },
         ),
         PopupMenuButton<String>(
           onSelected: _handleMenuAction,
           itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'clear_completed',
-              child: Text('Clear Completed'),
-            ),
+            const PopupMenuItem(value: 'clear_completed', child: Text('Clear Completed')),
             const PopupMenuItem(value: 'clear_all', child: Text('Clear All')),
           ],
         ),
@@ -131,16 +122,25 @@ class _TaskListScreenState extends State<TaskListScreen>
         return Column(
           children: [
             // Stats Card
-            if (taskProvider.totalTasks > 0)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: TaskStatsCard(),
-              ),
+            if (taskProvider.totalTasks > 0) Padding(padding: const EdgeInsets.all(16), child: TaskStatsCard()),
 
-            // Filter Chips
+            // Filter Chips with Toggle
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TaskFilterChips(),
+              child: Row(
+                children: [
+                  Expanded(child: TaskFilterChips()),
+                  IconButton(
+                    onPressed: () => taskProvider.toggleTaskDetailsCollapsed(),
+                    icon: AnimatedRotation(
+                      turns: taskProvider.isTaskDetailsCollapsed ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Icon(taskProvider.isTaskDetailsCollapsed ? Icons.view_list : Icons.view_agenda, color: AppColors.textSecondary),
+                    ),
+                    tooltip: taskProvider.isTaskDetailsCollapsed ? 'Show Details' : 'Hide Details',
+                  ),
+                ],
+              ),
             ),
 
             const SizedBox(height: 8),
@@ -157,10 +157,7 @@ class _TaskListScreenState extends State<TaskListScreen>
     final tasks = taskProvider.filteredTasks;
 
     if (tasks.isEmpty) {
-      return EmptyStateWidget(
-        filter: taskProvider.currentFilter,
-        hasSearch: taskProvider.searchQuery.isNotEmpty,
-      );
+      return EmptyStateWidget(filter: taskProvider.currentFilter, hasSearch: taskProvider.searchQuery.isNotEmpty);
     }
 
     return ListView.builder(
@@ -175,6 +172,7 @@ class _TaskListScreenState extends State<TaskListScreen>
           child: TaskTile(
             key: ValueKey(task.id),
             task: task,
+            isCollapsed: taskProvider.isTaskDetailsCollapsed,
             onTap: () => _showTaskDetails(task),
             onToggle: () => _toggleTask(task.id),
             onDelete: () => _deleteTask(task.id),
@@ -186,10 +184,7 @@ class _TaskListScreenState extends State<TaskListScreen>
   }
 
   Widget _buildFAB() {
-    return FloatingActionButton(
-      onPressed: _addTask,
-      child: const Icon(Icons.add),
-    );
+    return FloatingActionButton(onPressed: _addTask, child: const Icon(Icons.add));
   }
 
   void _handleMenuAction(String action) {
@@ -236,10 +231,7 @@ class _TaskListScreenState extends State<TaskListScreen>
         title: const Text('Delete Task'),
         content: const Text('Are you sure you want to delete this task?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
@@ -250,9 +242,7 @@ class _TaskListScreenState extends State<TaskListScreen>
                   content: const Text('Task deleted'),
                   duration: const Duration(seconds: 2),
                   behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               );
             },
@@ -264,22 +254,14 @@ class _TaskListScreenState extends State<TaskListScreen>
   }
 
   void _showTaskDetails(Task task) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _buildTaskDetailsSheet(task),
-    );
+    showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (context) => _buildTaskDetailsSheet(task));
   }
 
   Widget _buildTaskDetailsSheet(Task task) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      decoration: BoxDecoration(color: AppColors.surfaceColor, borderRadius: BorderRadius.circular(16)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,33 +271,18 @@ class _TaskListScreenState extends State<TaskListScreen>
             child: Container(
               width: 40,
               height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.borderMedium,
-                borderRadius: BorderRadius.circular(2),
-              ),
+              decoration: BoxDecoration(color: AppColors.borderMedium, borderRadius: BorderRadius.circular(2)),
             ),
           ),
           const SizedBox(height: 24),
 
           // Task title
-          Text(
-            task.title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              decoration: task.isCompleted
-                  ? TextDecoration.lineThrough
-                  : TextDecoration.none,
-            ),
-          ),
+          Text(task.title, style: Theme.of(context).textTheme.titleLarge?.copyWith(decoration: task.isCompleted ? TextDecoration.lineThrough : TextDecoration.none)),
           const SizedBox(height: 16),
 
           // Task description
           if (task.description.isNotEmpty) ...[
-            Text(
-              task.description,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-            ),
+            Text(task.description, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary)),
             const SizedBox(height: 16),
           ],
 
@@ -323,58 +290,30 @@ class _TaskListScreenState extends State<TaskListScreen>
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.getPriorityColorWithOpacity(
-                    task.priority,
-                    0.1,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: AppColors.getPriorityColorWithOpacity(task.priority, 0.1), borderRadius: BorderRadius.circular(16)),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.flag,
-                      size: 16,
-                      color: AppColors.getPriorityColor(task.priority),
-                    ),
+                    Icon(Icons.flag, size: 16, color: AppColors.getPriorityColor(task.priority)),
                     const SizedBox(width: 4),
                     Text(
                       _getPriorityText(task.priority),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.getPriorityColor(task.priority),
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(fontSize: 12, color: AppColors.getPriorityColor(task.priority), fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: task.isCompleted
-                      ? AppColors.success.withOpacity(0.1)
-                      : AppColors.warning.withOpacity(0.1),
+                  color: task.isCompleted ? AppColors.success.withOpacity(0.1) : AppColors.warning.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
                   task.isCompleted ? 'Completed' : 'Pending',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: task.isCompleted
-                        ? AppColors.success
-                        : AppColors.warning,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 12, color: task.isCompleted ? AppColors.success : AppColors.warning, fontWeight: FontWeight.w500),
                 ),
               ),
             ],
@@ -382,17 +321,8 @@ class _TaskListScreenState extends State<TaskListScreen>
           const SizedBox(height: 24),
 
           // Created date
-          Text(
-            'Created: ${_formatDate(task.createdAt)}',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          if (task.updatedAt != task.createdAt) ...[
-            const SizedBox(height: 4),
-            Text(
-              'Updated: ${_formatDate(task.updatedAt)}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
+          Text('Created: ${_formatDate(task.createdAt)}', style: Theme.of(context).textTheme.bodySmall),
+          if (task.updatedAt != task.createdAt) ...[const SizedBox(height: 4), Text('Updated: ${_formatDate(task.updatedAt)}', style: Theme.of(context).textTheme.bodySmall)],
         ],
       ),
     );
@@ -400,14 +330,10 @@ class _TaskListScreenState extends State<TaskListScreen>
 
   void _clearCompletedTasks() {
     final taskProvider = context.read<TaskProvider>();
-    final completedTasks = taskProvider.allTasks
-        .where((task) => task.isCompleted)
-        .toList();
+    final completedTasks = taskProvider.allTasks.where((task) => task.isCompleted).toList();
 
     if (completedTasks.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No completed tasks to clear')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No completed tasks to clear')));
       return;
     }
 
@@ -415,27 +341,16 @@ class _TaskListScreenState extends State<TaskListScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear Completed Tasks'),
-        content: Text(
-          'Are you sure you want to delete ${completedTasks.length} completed tasks?',
-        ),
+        content: Text('Are you sure you want to delete ${completedTasks.length} completed tasks?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               for (final task in completedTasks) {
                 taskProvider.deleteTask(task.id);
               }
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    '${completedTasks.length} completed tasks deleted',
-                  ),
-                ),
-              );
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${completedTasks.length} completed tasks deleted')));
             },
             child: const Text('Clear'),
           ),
@@ -448,9 +363,7 @@ class _TaskListScreenState extends State<TaskListScreen>
     final taskProvider = context.read<TaskProvider>();
 
     if (taskProvider.totalTasks == 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('No tasks to clear')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No tasks to clear')));
       return;
     }
 
@@ -458,21 +371,14 @@ class _TaskListScreenState extends State<TaskListScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear All Tasks'),
-        content: Text(
-          'Are you sure you want to delete all ${taskProvider.totalTasks} tasks?',
-        ),
+        content: Text('Are you sure you want to delete all ${taskProvider.totalTasks} tasks?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               taskProvider.deleteAllTasks();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('All tasks deleted')),
-              );
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All tasks deleted')));
             },
             child: const Text('Clear All'),
           ),

@@ -11,8 +11,7 @@ class TaskStatsCard extends StatefulWidget {
   State<TaskStatsCard> createState() => _TaskStatsCardState();
 }
 
-class _TaskStatsCardState extends State<TaskStatsCard>
-    with SingleTickerProviderStateMixin {
+class _TaskStatsCardState extends State<TaskStatsCard> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _progressAnimation;
 
@@ -23,14 +22,9 @@ class _TaskStatsCardState extends State<TaskStatsCard>
   }
 
   void _setupAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
+    _animationController = AnimationController(duration: const Duration(milliseconds: 1000), vsync: this);
 
-    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
+    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
 
     _animationController.forward();
   }
@@ -58,158 +52,116 @@ class _TaskStatsCardState extends State<TaskStatsCard>
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.analytics_outlined,
-                        color: AppColors.primaryColor,
-                        size: 24,
-                      ),
+                      decoration: BoxDecoration(color: AppColors.primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                      child: const Icon(Icons.analytics_outlined, color: AppColors.primaryColor, size: 24),
                     ),
                     const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Task Overview',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          'Your progress today',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Progress indicator
-                Row(
-                  children: [
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Progress',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.w500),
-                              ),
-                              Text(
-                                '${completionPercentage.toStringAsFixed(0)}%',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: AppColors.primaryColor,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          AnimatedBuilder(
-                            animation: _progressAnimation,
-                            builder: (context, child) {
-                              return LinearProgressIndicator(
-                                value:
-                                    _progressAnimation.value *
-                                    (completionPercentage / 100),
-                                backgroundColor: AppColors.borderLight,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  completionPercentage >= 100
-                                      ? AppColors.success
-                                      : AppColors.primaryColor,
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                              );
-                            },
-                          ),
+                          Text('Task Overview', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                          Text('Your progress today', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
                         ],
                       ),
                     ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Statistics
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Total',
-                        taskProvider.totalTasks.toString(),
-                        Icons.task_alt,
-                        AppColors.info,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Active',
-                        taskProvider.activeTasks.toString(),
-                        Icons.pending_actions,
-                        AppColors.warning,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Done',
-                        taskProvider.completedTasks.toString(),
-                        Icons.check_circle,
-                        AppColors.success,
+                    // Collapse toggle button
+                    IconButton(
+                      onPressed: () => taskProvider.toggleStatsCollapsed(),
+                      icon: AnimatedRotation(
+                        turns: taskProvider.isStatsCollapsed ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 300),
+                        child: const Icon(Icons.expand_less, color: AppColors.textSecondary),
                       ),
                     ),
                   ],
                 ),
 
-                // Completion message
-                if (completionPercentage >= 100 &&
-                    taskProvider.totalTasks > 0) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppColors.success.withOpacity(0.2),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.celebration,
-                          color: AppColors.success,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Great job! All tasks completed! 🎉',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: AppColors.success,
-                                  fontWeight: FontWeight.w500,
+                // Collapsible content
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: taskProvider.isStatsCollapsed
+                      ? const SizedBox.shrink()
+                      : Column(
+                          children: [
+                            const SizedBox(height: 20),
+
+                            // Progress indicator
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Progress', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                                          Text(
+                                            '${completionPercentage.toStringAsFixed(0)}%',
+                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      AnimatedBuilder(
+                                        animation: _progressAnimation,
+                                        builder: (context, child) {
+                                          return LinearProgressIndicator(
+                                            value: _progressAnimation.value * (completionPercentage / 100),
+                                            backgroundColor: AppColors.borderLight,
+                                            valueColor: AlwaysStoppedAnimation<Color>(completionPercentage >= 100 ? AppColors.success : AppColors.primaryColor),
+                                            borderRadius: BorderRadius.circular(4),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                          ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // Statistics
+                            Row(
+                              children: [
+                                Expanded(child: _buildStatItem(context, 'Total', taskProvider.totalTasks.toString(), Icons.task_alt, AppColors.info)),
+                                const SizedBox(width: 12),
+                                Expanded(child: _buildStatItem(context, 'Active', taskProvider.activeTasks.toString(), Icons.pending_actions, AppColors.warning)),
+                                const SizedBox(width: 12),
+                                Expanded(child: _buildStatItem(context, 'Done', taskProvider.completedTasks.toString(), Icons.check_circle, AppColors.success)),
+                              ],
+                            ),
+
+                            // Completion message
+                            if (completionPercentage >= 100 && taskProvider.totalTasks > 0) ...[
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.success.withOpacity(0.2)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.celebration, color: AppColors.success, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Great job! All tasks completed! 🎉',
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.success, fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ],
             ),
           ),
@@ -218,13 +170,7 @@ class _TaskStatsCardState extends State<TaskStatsCard>
     );
   }
 
-  Widget _buildStatItem(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildStatItem(BuildContext context, String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -238,18 +184,12 @@ class _TaskStatsCardState extends State<TaskStatsCard>
           const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: color, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w500),
           ),
         ],
       ),

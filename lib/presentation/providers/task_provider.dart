@@ -16,12 +16,18 @@ class TaskProvider extends ChangeNotifier {
   TaskFilter _currentFilter = TaskFilter.all;
   bool _isLoading = false;
   String _searchQuery = '';
+  bool _isSearching = false;
+  bool _isStatsCollapsed = false;
+  bool _isTaskDetailsCollapsed = false;
 
   // Getters
   List<Task> get allTasks => _allTasks;
   TaskFilter get currentFilter => _currentFilter;
   bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
+  bool get isSearching => _isSearching;
+  bool get isStatsCollapsed => _isStatsCollapsed;
+  bool get isTaskDetailsCollapsed => _isTaskDetailsCollapsed;
 
   /// Get filtered tasks based on current filter and search query
   List<Task> get filteredTasks {
@@ -43,8 +49,7 @@ class TaskProvider extends ChangeNotifier {
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
       tasks = tasks.where((task) {
-        return task.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            task.description.toLowerCase().contains(_searchQuery.toLowerCase());
+        return task.title.toLowerCase().contains(_searchQuery.toLowerCase()) || task.description.toLowerCase().contains(_searchQuery.toLowerCase());
       }).toList();
     }
 
@@ -76,17 +81,9 @@ class TaskProvider extends ChangeNotifier {
   }
 
   /// Add a new task
-  Future<void> addTask(
-    String title,
-    String description, {
-    int priority = 1,
-  }) async {
+  Future<void> addTask(String title, String description, {int priority = 1}) async {
     try {
-      final newTask = Task.create(
-        title: title,
-        description: description,
-        priority: priority,
-      );
+      final newTask = Task.create(title: title, description: description, priority: priority);
 
       await _taskRepository.addTask(newTask);
       await loadTasks(); // Refresh tasks
@@ -144,6 +141,38 @@ class TaskProvider extends ChangeNotifier {
   /// Clear search query
   void clearSearch() {
     _searchQuery = '';
+    _isSearching = false;
+    notifyListeners();
+  }
+
+  /// Set search state
+  void setSearching(bool isSearching) {
+    _isSearching = isSearching;
+    _isStatsCollapsed = isSearching;
+    if (!isSearching) {
+      _searchQuery = '';
+    }
+    notifyListeners();
+  }
+
+  /// Toggle search state
+  void toggleSearching() {
+    _isSearching = !_isSearching;
+    if (!_isSearching) {
+      _searchQuery = '';
+    }
+    notifyListeners();
+  }
+
+  /// Toggle stats collapsed state
+  void toggleStatsCollapsed() {
+    _isStatsCollapsed = !_isStatsCollapsed;
+    notifyListeners();
+  }
+
+  /// Toggle task details collapsed state
+  void toggleTaskDetailsCollapsed() {
+    _isTaskDetailsCollapsed = !_isTaskDetailsCollapsed;
     notifyListeners();
   }
 

@@ -9,22 +9,15 @@ class TaskTile extends StatefulWidget {
   final VoidCallback? onToggle;
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
+  final bool isCollapsed;
 
-  const TaskTile({
-    super.key,
-    required this.task,
-    this.onTap,
-    this.onToggle,
-    this.onDelete,
-    this.onEdit,
-  });
+  const TaskTile({super.key, required this.task, this.onTap, this.onToggle, this.onDelete, this.onEdit, this.isCollapsed = false});
 
   @override
   State<TaskTile> createState() => _TaskTileState();
 }
 
-class _TaskTileState extends State<TaskTile>
-    with SingleTickerProviderStateMixin {
+class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<Color?> _colorAnimation;
@@ -36,25 +29,14 @@ class _TaskTileState extends State<TaskTile>
   }
 
   void _setupAnimations() {
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
+    _animationController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
 
-    _colorAnimation =
-        ColorTween(
-          begin: AppColors.cardColor,
-          end: AppColors.primaryColor.withOpacity(0.05),
-        ).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeInOut,
-          ),
-        );
+    _colorAnimation = ColorTween(
+      begin: AppColors.cardColor,
+      end: AppColors.primaryColor.withOpacity(0.05),
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
   }
 
   @override
@@ -105,96 +87,17 @@ class _TaskTileState extends State<TaskTile>
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                color: widget.task.isCompleted
-                    ? AppColors.success
-                    : Colors.transparent,
-                border: Border.all(
-                  color: widget.task.isCompleted
-                      ? AppColors.success
-                      : AppColors.borderMedium,
-                  width: 2,
-                ),
+                color: widget.task.isCompleted ? AppColors.success : Colors.transparent,
+                border: Border.all(color: widget.task.isCompleted ? AppColors.success : AppColors.borderMedium, width: 2),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: widget.task.isCompleted
-                  ? const Icon(
-                      Icons.check,
-                      color: AppColors.textOnPrimary,
-                      size: 16,
-                    )
-                  : null,
+              child: widget.task.isCompleted ? const Icon(Icons.check, color: AppColors.textOnPrimary, size: 16) : null,
             ),
           ),
           const SizedBox(width: 16),
 
-          // Task content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Task title
-                Text(
-                  widget.task.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    decoration: widget.task.isCompleted
-                        ? TextDecoration.lineThrough
-                        : TextDecoration.none,
-                    color: widget.task.isCompleted
-                        ? AppColors.textSecondary
-                        : AppColors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                // Task description
-                if (widget.task.description.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.task.description,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: widget.task.isCompleted
-                          ? AppColors.textLight
-                          : AppColors.textSecondary,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-
-                // Priority indicator and date
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    // Priority indicator
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: AppColors.getPriorityColor(widget.task.priority),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _getPriorityText(widget.task.priority),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.getPriorityColor(widget.task.priority),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      _formatDate(widget.task.createdAt),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textLight,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          // Task content - Dynamic based on collapse state
+          Expanded(child: widget.isCollapsed ? _buildMinimalContent() : _buildFullContent()),
 
           // Actions
           PopupMenuButton<String>(
@@ -225,6 +128,97 @@ class _TaskTileState extends State<TaskTile>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMinimalContent() {
+    return Row(
+      children: [
+        // Task title
+        Expanded(
+          child: Text(
+            widget.task.title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              decoration: widget.task.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+              color: widget.task.isCompleted ? AppColors.textSecondary : AppColors.textPrimary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+
+        // Minimal indicators
+        const SizedBox(width: 8),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Priority indicator (small colored circle)
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: AppColors.getPriorityColor(widget.task.priority), shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 8),
+
+            // Indicator for additional content
+            if (widget.task.description.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: AppColors.borderLight, borderRadius: BorderRadius.circular(8)),
+                child: const Icon(Icons.description, size: 12, color: AppColors.textSecondary),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFullContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Task title
+        Text(
+          widget.task.title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            decoration: widget.task.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+            color: widget.task.isCompleted ? AppColors.textSecondary : AppColors.textPrimary,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+
+        // Task description
+        if (widget.task.description.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            widget.task.description,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: widget.task.isCompleted ? AppColors.textLight : AppColors.textSecondary),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+
+        // Priority indicator and date
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            // Priority indicator
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(color: AppColors.getPriorityColor(widget.task.priority), shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _getPriorityText(widget.task.priority),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.getPriorityColor(widget.task.priority), fontWeight: FontWeight.w500),
+            ),
+            const Spacer(),
+            Text(_formatDate(widget.task.createdAt), style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textLight)),
+          ],
+        ),
+      ],
     );
   }
 

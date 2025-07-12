@@ -166,7 +166,7 @@ taskify/
 
 | Home Screen | Add Task | Filter Tasks | Task Details |
 |-------------|----------|--------------|--------------|
-| ![Home](screenshots/home.png) | ![Add](screenshots/add.png) | ![Filter](screenshots/filter.png) | ![Details](screenshots/details.png) |
+| ![Home](screenshots/home.png) | ![Add](screenshots/add.png) | ![Details](screenshots/details.png) |
 
 ## 🎯 Key Highlights
 

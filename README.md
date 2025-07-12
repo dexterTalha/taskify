@@ -4,7 +4,7 @@ A beautiful and feature-rich to-do manager app built with Flutter, implementing 
 
 ## 📱 Download APK
 
-[**Download Taskify APK**](https://drive.google.com/file/d/1zReTSQuG0jzhDU9kNtaTckkHuCak7VSY/view?usp=sharing)
+[**Download Taskify APK**](https://drive.google.com/file/d/1zReTSQuG0jzhDU9kNtaTckkHuCak7VSY/view?usp=sharing){:target="_blank"}
 
 ## 🌟 Features
 
@@ -164,7 +164,7 @@ taskify/
 
 ## 📸 Screenshots
 
-| Home Screen | Add Task | Filter Tasks | Task Details |
+| Home Screen | Add Task | Task Details |
 |-------------|----------|--------------|--------------|
 | ![Home](screenshots/home.png) | ![Add](screenshots/add.png) | ![Details](screenshots/details.png) |
 
